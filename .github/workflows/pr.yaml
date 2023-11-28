@@ -1,0 +1,40 @@
+name: PR checks
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  pr:
+    strategy:
+      fail-fast: false
+      matrix:
+        version: [ "8.0", "8.1", "8.2" ]
+
+    name: ${{ matrix.version }}
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ matrix.version }}
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@master
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@master
+    - uses: azure/docker-login@v1
+      with:
+        username: ${{ secrets.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+    - name: Build
+      run: |
+         docker buildx create --name alpine-php
+         docker buildx use alpine-php
+         docker buildx inspect --bootstrap
+         ARCHS="linux/arm64" make build
+    - name: Run
+      run: |
+        make run-detached
+    - name: Test Main
+      run: |
+        make test-main

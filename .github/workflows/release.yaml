@@ -1,0 +1,39 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - master
+jobs:
+  push-to-registry:
+    strategy:
+      fail-fast: true
+      matrix:
+        version: [ "8.0", "8.1", "8.2" ]
+        arch: [
+          "linux/amd64,linux/arm64,linux/arm/v8,linux/arm/v7",
+        ]
+    env:
+      VERSION: ${{ matrix.version }}
+      ARCHS: ${{ matrix.arch }}
+    name: release-${{ matrix.version }}-${{ matrix.arch }}
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@master
+      with:
+        platforms: "all"
+    - name: Set up Docker Buildx
+      id: buildx
+      uses: docker/setup-buildx-action@master
+      with:
+        install: true
+    - uses: azure/docker-login@v1
+      with:
+        username: ${{ secrets.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+    - run: |
+         docker buildx create --name alpine-php
+         docker buildx use alpine-php
+         make release
