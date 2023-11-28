@@ -1,6 +1,6 @@
 FROM --platform=$BUILDPLATFORM alpine:3.7 as main
 
-LABEL maintainer="Jorge Arco <jorge.arcoma@gmail.com>"
+LABEL maintainer="Checa  <fran2101979@gmail.com>"
 
 RUN apk add -U \
 	# Packages
